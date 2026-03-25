@@ -4,138 +4,126 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hafizm | Memorize the Quran</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0B0B0B;
             --accent: #FF7A00;
-            --gold: #FFC46B;
-            --glass: rgba(255, 255, 255, 0.05);
             --text: #FFFFFF;
+            --glass: rgba(255, 255, 255, 0.08);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        
-        .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); overflow-x: hidden; }
         
         #app { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 80px; }
         
-        nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; display: flex; justify-content: space-around; padding: 15px; background: rgba(11, 11, 11, 0.9); backdrop-filter: blur(10px); border-top: 1px solid #222; }
-        .nav-item { cursor: pointer; color: #666; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .screen { padding: 20px; transition: opacity 0.3s ease; }
+        .hidden { display: none; opacity: 0; }
+        
+        nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; display: flex; justify-content: space-around; padding: 15px; background: rgba(11, 11, 11, 0.95); backdrop-filter: blur(15px); border-top: 1px solid #222; z-index: 100; }
+        .nav-item { cursor: pointer; color: #666; font-size: 12px; font-weight: 600; }
         .nav-item.active { color: var(--accent); }
         
-        button { cursor: pointer; border: none; background: none; transition: transform 0.2s; }
+        .glass { background: var(--glass); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 15px; }
+        
+        button { cursor: pointer; border: none; background: var(--glass); color: white; padding: 12px 20px; border-radius: 12px; transition: transform 0.1s, background 0.2s; font-weight: 600; }
         button:active { transform: scale(0.95); }
-        .btn-glow { background: var(--accent); color: white; padding: 12px 24px; border-radius: 12px; font-weight: 600; box-shadow: 0 0 15px rgba(255, 122, 0, 0.3); }
+        .btn-accent { background: var(--accent); }
 
-        .screen { padding: 20px; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .surah-list { display: flex; flex-direction: column; gap: 10px; }
+        .surah-item { display: flex; justify-content: space-between; align-items: center; }
         
-        .surah-item { display: flex; justify-content: space-between; padding: 15px; margin-bottom: 10px; }
-        
-        .arabic { font-family: 'Noto Sans Arabic', sans-serif; }
+        #ayah-block { display: none; }
     </style>
 </head>
 <body>
     <div id="app">
-        <main id="content" class="screen"></main>
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen">
+            <h1 style="margin-bottom: 20px;">Hafizm</h1>
+            <div id="surah-list" class="surah-list"></div>
+            <div id="ayah-block" class="glass" style="margin-top: 20px;">
+                <button onclick="hideAyah()">← Back</button>
+                <p style="margin: 20px 0; font-size: 20px;">"In the name of Allah, the Entirely Merciful, the Especially Merciful."</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="alert('Playing')">🔊 Play</button>
+                    <button onclick="toggleAyahText()">👁 Hide/Show</button>
+                    <button onclick="alert('Mic ON')">🎙 Mic</button>
+                    <button class="btn-accent" onclick="alert('Saved')">✅ Memorized</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pages Screen -->
+        <div id="pages-screen" class="screen hidden">
+            <h1>Mushaf Pages</h1>
+            <div class="glass" style="margin-top: 20px; text-align: center; padding: 40px;">
+                <h2 id="page-num">Page 1</h2>
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="changePage(-1)">Prev</button>
+                    <button onclick="changePage(1)">Next</button>
+                    <button class="btn-accent" onclick="savePage()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Screen -->
+        <div id="audio-screen" class="screen hidden">
+            <h1>Audio Player</h1>
+            <div class="glass" style="margin-top: 20px;">
+                <select id="reciter-select" style="width: 100%; padding: 10px; border-radius: 10px; background: #222; color: white;">
+                    <option>Yasser Al-Dosari</option>
+                    <option>Sudais</option>
+                    <option>Idris Abkar</option>
+                </select>
+                <button class="btn-accent" style="width: 100%; margin-top: 15px;" onclick="alert('Playing...')">▶ Play</button>
+            </div>
+        </div>
+
+        <!-- Profile Screen -->
+        <div id="profile-screen" class="screen hidden">
+            <h1>Profile</h1>
+            <div class="glass" style="margin-top: 20px;">
+                <p>Name: User</p>
+                <p>Level: Beginner</p>
+                <button class="btn-accent" style="width: 100%; margin-top: 15px;" onclick="window.open('https://t.me/muu3')">Telegram Support</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
         <nav>
-            <div class="nav-item active" onclick="router('home')">Home</div>
-            <div class="nav-item" onclick="router('pages')">Pages</div>
-            <div class="nav-item" onclick="router('audio')">Audio</div>
-            <div class="nav-item" onclick="router('profile')">Profile</div>
+            <div class="nav-item active" onclick="switchScreen('home-screen', this)">Home</div>
+            <div class="nav-item" onclick="switchScreen('pages-screen', this)">Pages</div>
+            <div class="nav-item" onclick="switchScreen('audio-screen', this)">Audio</div>
+            <div class="nav-item" onclick="switchScreen('profile-screen', this)">Profile</div>
         </nav>
     </div>
 
     <script>
-        const state = { screen: 'home', progress: JSON.parse(localStorage.getItem('hafizm_prog')) || {} };
-        
-        function router(screen) {
-            state.screen = screen;
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.querySelector(`[onclick="router('${screen}')"]`).classList.add('active');
-            render();
+        // Screen Switching
+        function switchScreen(screenId, navEl) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            navEl.classList.add('active');
         }
 
-        function render() {
-            const content = document.getElementById('content');
-            if (state.screen === 'home') content.innerHTML = renderHome();
-            else if (state.screen === 'pages') content.innerHTML = renderPages();
-            else if (state.screen === 'audio') content.innerHTML = renderAudio();
-            else if (state.screen === 'profile') content.innerHTML = renderProfile();
+        // Home Screen Logic
+        const surahList = document.getElementById('surah-list');
+        for(let i=1; i<=10; i++) {
+            const div = document.createElement('div');
+            div.className = 'glass surah-item';
+            div.innerHTML = `<span>Surah ${i}</span><button onclick="showAyah()">Open</button>`;
+            surahList.appendChild(div);
         }
+        function showAyah() { surahList.style.display = 'none'; document.getElementById('ayah-block').style.display = 'block'; }
+        function hideAyah() { surahList.style.display = 'flex'; document.getElementById('ayah-block').style.display = 'none'; }
+        function toggleAyahText() { const p = document.querySelector('#ayah-block p'); p.style.visibility = p.style.visibility === 'hidden' ? 'visible' : 'hidden'; }
 
-        function renderHome() {
-            return `
-                <h1 style="font-size: 24px; margin-bottom: 20px;">Hafizm</h1>
-                <p style="color: #888; margin-bottom: 20px;">Memorize the Quran with precision</p>
-                <div class="glass" style="padding: 10px;">
-                    ${Array.from({length: 5}).map((_, i) => \`
-                        <div class="surah-item glass" onclick="openAyahMode(\${i+1})">
-                            <span>\${i+1}. Surah Name</span>
-                            <span class="arabic">سورة الفاتحة</span>
-                        </div>
-                    \`).join('')}
-                </div>
-            `;
-        }
-
-        function openAyahMode(surahId) {
-            document.getElementById('content').innerHTML = \`
-                <div class="screen">
-                    <button onclick="router('home')">← Back</button>
-                    <div class="glass" style="margin-top: 20px; padding: 40px; text-align: center;">
-                        <p id="ayah-text" class="arabic" style="font-size: 28px;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
-                        <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
-                            <button class="btn-glow" onclick="simulateVoice()">🎙 Mic</button>
-                            <button class="glass" style="padding: 10px 20px;">👁</button>
-                        </div>
-                    </div>
-                </div>
-            \`;
-        }
-
-        function simulateVoice() {
-            const el = document.getElementById('ayah-text');
-            el.style.opacity = '0';
-            setTimeout(() => {
-                el.style.opacity = '1';
-                el.innerText = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
-            }, 1000);
-        }
-
-        function renderPages() {
-            return \`<h1>Mushaf Pages</h1><div class="glass" style="height: 300px; display: flex; align-items: center; justify-content: center;">Page 1</div>\`;
-        }
-
-        function renderAudio() {
-            return \`<h1>Audio Player</h1><div class="glass" style="padding: 20px;">
-                <button class="btn-glow" style="width: 100%;">▶ Play</button>
-                <select style="width: 100%; margin-top: 20px; padding: 10px; background: #222; color: white; border-radius: 10px;">
-                    <option>Yasser Al-Dosari</option>
-                    <option>Sudais</option>
-                </select>
-            </div>\`;
-        }
-
-        function renderProfile() {
-            return \`
-                <h1>Profile</h1>
-                <div class="glass" style="padding: 20px; margin-top: 20px;">
-                    <p>Level: Beginner</p>
-                    <div style="margin-top: 20px;">
-                        <button class="btn-glow" onclick="window.open('https://t.me/muu3')">Telegram Support</button>
-                    </div>
-                    <div style="margin-top: 20px;">
-                        <h3>Subscription</h3>
-                        <p>Free: 2 ayahs/day</p>
-                        <p>Month: 2000₽</p>
-                    </div>
-                </div>
-            \`;
-        }
-
-        router('home');
+        // Pages Screen Logic
+        let page = parseInt(localStorage.getItem('hafizm_page')) || 1;
+        document.getElementById('page-num').innerText = 'Page ' + page;
+        function changePage(dir) { page = Math.max(1, page + dir); document.getElementById('page-num').innerText = 'Page ' + page; }
+        function savePage() { localStorage.setItem('hafizm_page', page); alert('Saved!'); }
     </script>
 </body>
 </html>
